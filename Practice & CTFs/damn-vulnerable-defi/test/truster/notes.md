@@ -1,0 +1,2 @@
+- the only way to drain the pool balance is to make balanceBefore = 0.
+- there is 1 more way to drain it, make attacker contract approve all the tokens.

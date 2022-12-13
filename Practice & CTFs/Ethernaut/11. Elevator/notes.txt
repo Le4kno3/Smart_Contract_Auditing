@@ -1,0 +1,5 @@
+- call the contract from some other contract, and define the definition of interface there.
+- we can clearly see that the "Building" contract is not defined, just its interface is declared.
+
+Hint: You only run the setTop(), so that by default "toggle" is true. Else it will return false in "top".
+In simple words, make sure "toggle" variable value is true before triggering the attack.

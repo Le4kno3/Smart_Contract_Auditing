@@ -1,0 +1,25 @@
+token adress: 0x38f313A5184ACbDFF53120855AE351cD5ef24E15
+
+To: 0x04dfa364501774Ffc8bEB3842de5F6ce866FEb4D
+
+From: 0x91713D44366a54915326533931676B59b6dd0B14
+
+Initial supply: 1 * 10 ** 24 = 1000000000000000000000000
+
+1000000000000000000000000
+
+----------------------------------------------------------------------------
+
+1. currently owned tokens.
+Number(await contract.balanceOf("0x91713D44366a54915326533931676B59b6dd0B14"))
+
+2. token approve itself (because remix issue).
+await contract.approve("0x91713D44366a54915326533931676B59b6dd0B14", "1000000000000000000000000")
+
+
+3. token transfer.
+await contract.transferFrom("0x91713D44366a54915326533931676B59b6dd0B14", "0x04dfa364501774Ffc8bEB3842de5F6ce866FEb4D", "1000000000000000000000000")
+
+
+4. check current tokens.
+Number(await contract.balanceOf("0x91713D44366a54915326533931676B59b6dd0B14"))

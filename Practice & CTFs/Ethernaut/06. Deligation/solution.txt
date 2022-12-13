@@ -1,0 +1,21 @@
+- The main contract is "Deligation".
+- We need to change owner of "Deligation" contract.
+- "Deligate" contract is the shared code.
+- "Deligation" contract sends a deligate call to "Dligate" contract
+    - which means the code logic will be fected from "Deligate" contract.
+    - the context will be "Deligation" contract static & global variables.
+- But is the order of static variables correct?
+    - yes both contract has first variable as "owner" state variable.
+    - this means our attack is feasible.
+- there is unchecked change of owner in the shared contract "Deligate".
+    - all requirements are met for attack.
+
+Attack: We now just need to call the fallback function of "Deligation" contract sending the change of owner function as call data.
+
+Command: Run the below command in the customized environment console of ethernaut labs.
+
+```
+var functSignature = web3.utils.sha3("pwn()")
+
+contract.sendTransaction({data: functSignature})
+```

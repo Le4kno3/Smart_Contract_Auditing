@@ -1,0 +1,2 @@
+To mint transactions after sometime.
+There is not much check except that current block hash should not be same as the previous.

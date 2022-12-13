@@ -1,0 +1,2 @@
+* the contract ABI does not exposes any new function or storage getters that are public.
+* The bytes32 data[3] stores sensitive data. Its last value is the key, but it has to typecasted to bytes16

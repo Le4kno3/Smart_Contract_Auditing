@@ -1,0 +1,9 @@
+* Owner is not handled by Ownable library.
+* It makes less sense to attack a wellknown standard libarary to change ownership.
+* This means the only option is to somehow, using current main contract, override the owner state variable.
+    * But the variable `_owner` is a private variable, which means we cannot directly access it.
+
+* According to the hint, we need to do some kind of override such that the owner address is updated.
+* This means definitely we need to make use of `codex` bytes32 array.
+
+* Can we access any memory using the bytes32[] dynamic array?

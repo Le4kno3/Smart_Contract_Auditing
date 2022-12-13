@@ -1,0 +1,5 @@
+contract.contribute({value: "100000000000000"})
+
+contract.withdraw()
+
+SUBMIT

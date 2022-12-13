@@ -1,0 +1,13 @@
+My wallet address (in hexd) : 0x2d6A73e090d4cbe000156F13147084182ccA568d
+
+type(uint64).max (in uint64): 18446744073709551615
+
+uint64(bytes8(keccak256(abi.encodePacked(msg.sender)))) ^ type(uint64).max = uint64(_gateKey)
+
+Then convert this uint to bytes8 = 0xA6CE4B12A9531B3B
+
+bytes8(result) - this is a simple decimal to hexd convert.
+
+---------------------
+
+Due to some issues with remix in handling the contract call, the answer is not verified pratically.
