@@ -42,6 +42,7 @@ contract Exchange is ReentrancyGuard {
 
         emit TokenBought(msg.sender, tokenId, currentPriceInWei);
 
+        //it makes no sense to return the token ID, it may be useful only if contract to contract onchain communication
         return tokenId;
     }
 
@@ -50,6 +51,7 @@ contract Exchange is ReentrancyGuard {
             msg.sender == token.ownerOf(tokenId),
             "Seller must be the owner"
         );
+        //this means before selling the tokens must be approved for transfer, this is not secure to set approval before this transaction.
         require(
             token.getApproved(tokenId) == address(this),
             "Seller must have approved transfer"

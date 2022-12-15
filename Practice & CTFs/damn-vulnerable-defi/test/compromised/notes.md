@@ -26,15 +26,26 @@ Notes
     - Can I change these sources to attacker defined sources?
         - d
 
-- Attack (using private key of 2 reporters)
+- Attack Initial approach (using private key of 2 reporters)
     - from the reporter1 account - "4d48686a4e6a63345a575978595745304e545a6b59545931597a5a6d597a55"
-        - Change the price of the token 0.0001ETH
+        - Change the price of the token 0.001ETH
     - from the reporter1 account - "4d4867794d4467794e444a6a4e4442685932526d59546c6c5a4467344f5755"
-        - Change the price of the token 0.0002ETH
-    - Now the median of the 3 reporters is, 1 DVNFT = 0.002 ETH
+        - Change the price of the token 0.001ETH
+    - Now the median of the 3 reporters is, 1 DVNFT = 0.001 ETH
     - Now buy 10 DVNFT.
     - Change the prices back to 1 DVNFT = 999 ETH
     - Then sell 10 DVNFT, to get back 9990ETH.
+
+- Attack Finetuned approach for the challenge (our goal is not to buy 10 tokens but make the exchange balance to 0)
+    - from the reporter1 account - "4d48686a4e6a63345a575978595745304e545a6b59545931597a5a6d597a55"
+        - Change the price of the token 0.001ETH
+    - from the reporter1 account - "4d4867794d4467794e444a6a4e4442685932526d59546c6c5a4467344f5755"
+        - Change the price of the token 0.001ETH
+    - Now the median of the 3 reporters is, 1 DVNFT = 0.001 ETH
+    - Now buy 1 DVNFT
+    - Change the prices back to 1 DVNFT = 9989.99 ETH (remaining exchange balance)
+    - Then sell that 1 DVNFT token.
+
 
 0x4d48686a4e6a63345a575978595745304e545a6b59545931597a5a6d597a55344e6a466b4e4451344f544a6a5a475a68597a426a4e6d4d34597a49314e6a42695a6a426a4f575a69593252685a544a6d4e44637a4e574535
 
