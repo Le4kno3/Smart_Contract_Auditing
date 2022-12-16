@@ -10,7 +10,7 @@ describe('[Challenge] Free Rider', function () {
     let deployer, attacker, buyer;
 
     // The NFT marketplace will have 6 tokens, at 15 ETH each
-    const NFT_PRICE = ethers.utils.parseEther('15')
+    const NFT_PRICE = ethers.utils.parseEther('15');
     const AMOUNT_OF_NFTS = 6;
     const MARKETPLACE_INITIAL_ETH_BALANCE = ethers.utils.parseEther('90');
 
@@ -45,7 +45,7 @@ describe('[Challenge] Free Rider', function () {
             this.uniswapFactory.address,
             this.weth.address
         );
-        
+
         // Approve tokens, and then create Uniswap v2 pair against WETH and add liquidity
         // Note that the function takes care of deploying the pair automatically
         await this.token.approve(
@@ -61,7 +61,7 @@ describe('[Challenge] Free Rider', function () {
             (await ethers.provider.getBlock('latest')).timestamp * 2,   // deadline
             { value: UNISWAP_INITIAL_WETH_RESERVE }
         );
-        
+
         // Get a reference to the created Uniswap pair
         const UniswapPairFactory = new ethers.ContractFactory(pairJson.abi, pairJson.bytecode, deployer);
         this.uniswapPair = await UniswapPairFactory.attach(
@@ -98,13 +98,26 @@ describe('[Challenge] Free Rider', function () {
         // Deploy buyer's contract, adding the attacker as the partner
         this.buyerContract = await (await ethers.getContractFactory('FreeRiderBuyer', buyer)).deploy(
             attacker.address, // partner
-            this.nft.address, 
+            this.nft.address,
             { value: BUYER_PAYOUT }
         );
     });
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        const tokenAddress = await this.marketplace.token();
+
+        //mint 2 new tokens
+        //but only the deployer of token contract (marketplace contract) can mint new tokens, due to minter RBAC.
+
+        // console.log("The current token id: ", )
+
+        //add 2 new NFTs in offer at marketplace with price = 0.01 ETH
+        await this.marketplace.offerMany(
+            [6, 7],
+            [NFT_PRICE, NFT_PRICE, NFT_PRICE, NFT_PRICE, NFT_PRICE, NFT_PRICE]
+        );
+
     });
 
     after(async function () {
