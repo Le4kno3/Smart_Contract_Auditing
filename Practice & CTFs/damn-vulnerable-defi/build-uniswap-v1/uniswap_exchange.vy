@@ -2,6 +2,14 @@
 # @notice Source code found at https://github.com/uniswap
 # @notice Use at your own risk
 
+# Tokens are ERC20 compatible.
+
+
+## -----------------------------
+## INTERFACES
+## -----------------------------
+
+
 # factory address
 contract Factory():
     def getExchange(token_addr: address) -> address: constant
@@ -12,6 +20,13 @@ contract Exchange():
     def ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient: address) -> uint256: modifying
     def ethToTokenTransferOutput(tokens_bought: uint256, deadline: timestamp, recipient: address) -> uint256(wei): modifying
 
+
+
+## -----------------------------
+## EVENTS
+## -----------------------------
+
+
 # list of all events
 TokenPurchase: event({buyer: indexed(address), eth_sold: indexed(uint256(wei)), tokens_bought: indexed(uint256)})
 EthPurchase: event({buyer: indexed(address), tokens_sold: indexed(uint256), eth_bought: indexed(uint256(wei))})
@@ -19,6 +34,13 @@ AddLiquidity: event({provider: indexed(address), eth_amount: indexed(uint256(wei
 RemoveLiquidity: event({provider: indexed(address), eth_amount: indexed(uint256(wei)), token_amount: indexed(uint256)})
 Transfer: event({_from: indexed(address), _to: indexed(address), _value: uint256})
 Approval: event({_owner: indexed(address), _spender: indexed(address), _value: uint256})
+
+
+
+## -----------------------------
+## STATE VARIABLES
+## -----------------------------
+
 
 name: public(bytes32)                             # Uniswap V1
 symbol: public(bytes32)                           # UNI-V1
@@ -30,7 +52,13 @@ token: address(ERC20)                             # address of the ERC20 token t
 factory: Factory                                  # interface for the factory that created this contract
 
 
-# intialization of token a new "exchange token" contract.
+
+
+## -----------------------------
+## MAIN
+## -----------------------------
+
+## intialization of token a new "exchange token" contract.
 @public
 def setup(token_addr: address):
     assert (self.factory == ZERO_ADDRESS and self.token == ZERO_ADDRESS) and token_addr != ZERO_ADDRESS
@@ -46,6 +74,8 @@ def setup(token_addr: address):
 # @param max_tokens Maximum number of tokens deposited. Deposits max amount if total UNI supply is 0.
 # @param deadline Time after which this transaction can no longer be executed.
 # @return The amount of UNI minted.
+## inject liquidity to the exchange for that token along with the ETH.
+## In return you will get UNI tokens to quantify your deposit.
 @public
 @payable
 def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestamp) -> uint256:
@@ -57,13 +87,12 @@ def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestam
         token_reserve: uint256 = self.token.balanceOf(self)     # liquidity of tokens in exchange
         token_amount: uint256 = msg.value * token_reserve / eth_reserve + 1
         liquidity_minted: uint256 = msg.value * total_liquidity / eth_reserve
-        
+
         assert max_tokens >= token_amount and liquidity_minted >= min_liquidity
-        
+
         self.balances[msg.sender] += liquidity_minted
         self.totalSupply = total_liquidity + liquidity_minted
-        
-        
+
         assert self.token.transferFrom(msg.sender, self, token_amount)
         log.AddLiquidity(msg.sender, msg.value, token_amount)
         log.Transfer(ZERO_ADDRESS, msg.sender, liquidity_minted)
@@ -86,6 +115,8 @@ def addLiquidity(min_liquidity: uint256, max_tokens: uint256, deadline: timestam
 # @param min_tokens Minimum Tokens withdrawn.
 # @param deadline Time after which this transaction can no longer be executed.
 # @return The amount of ETH and Tokens withdrawn.
+## If you want to remove liquidity, then this means you ar removing your tokens from exchange, and keep the tokens with you.
+## To do so, you need to spend UNI tokens to quantify your removing of liquidity.
 @public
 def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256, deadline: timestamp) -> (uint256(wei), uint256):
     assert (amount > 0 and deadline > block.timestamp) and (min_eth > 0 and min_tokens > 0)
@@ -108,6 +139,59 @@ def removeLiquidity(amount: uint256, min_eth: uint256(wei), min_tokens: uint256,
 # @param input_reserve Amount of ETH or Tokens (input type) in exchange reserves.
 # @param output_reserve Amount of ETH or Tokens (output type) in exchange reserves.
 # @return Amount of ETH or Tokens bought.
+
+
+## -----------------------------
+## PRICE GETTERS
+## -----------------------------
+
+
+## Input = selling
+## Output = buying
+
+# @notice Public price function for ETH to Token trades with an exact input.
+# @param eth_sold Amount of ETH sold.
+# @return Amount of Tokens that can be bought with input ETH.
+@public
+@constant
+def getEthToTokenInputPrice(eth_sold: uint256(wei)) -> uint256:
+    assert eth_sold > 0
+    token_reserve: uint256 = self.token.balanceOf(self)
+    return self.getInputPrice(as_unitless_number(eth_sold), as_unitless_number(self.balance), token_reserve)
+
+# @notice Public price function for ETH to Token trades with an exact output.
+# @param tokens_bought Amount of Tokens bought.
+# @return Amount of ETH needed to buy output Tokens.
+@public
+@constant
+def getEthToTokenOutputPrice(tokens_bought: uint256) -> uint256(wei):
+    assert tokens_bought > 0
+    token_reserve: uint256 = self.token.balanceOf(self)
+    eth_sold: uint256 = self.getOutputPrice(tokens_bought, as_unitless_number(self.balance), token_reserve)
+    return as_wei_value(eth_sold, 'wei')
+
+# @notice Public price function for Token to ETH trades with an exact input.
+# @param tokens_sold Amount of Tokens sold.
+# @return Amount of ETH that can be bought with input Tokens.
+@public
+@constant
+def getTokenToEthInputPrice(tokens_sold: uint256) -> uint256(wei):
+    assert tokens_sold > 0
+    token_reserve: uint256 = self.token.balanceOf(self)
+    eth_bought: uint256 = self.getInputPrice(tokens_sold, token_reserve, as_unitless_number(self.balance))
+    return as_wei_value(eth_bought, 'wei')
+
+# @notice Public price function for Token to ETH trades with an exact output.
+# @param eth_bought Amount of output ETH.
+# @return Amount of Tokens needed to buy output ETH.
+@public
+@constant
+def getTokenToEthOutputPrice(eth_bought: uint256(wei)) -> uint256:
+    assert eth_bought > 0
+    token_reserve: uint256 = self.token.balanceOf(self)
+    return self.getOutputPrice(as_unitless_number(eth_bought), token_reserve, as_unitless_number(self.balance))
+
+
 @private
 @constant
 def getInputPrice(input_amount: uint256, input_reserve: uint256, output_reserve: uint256) -> uint256:
@@ -147,6 +231,13 @@ def ethToTokenInput(eth_sold: uint256(wei), min_tokens: uint256, deadline: times
 @payable
 def __default__():
     self.ethToTokenInput(msg.value, 1, block.timestamp, msg.sender, msg.sender)
+
+
+
+## -----------------------------
+## INPUT & OUTPUT FUNCTIONS
+## -----------------------------
+
 
 # @notice Convert ETH to Tokens.
 # @dev User specifies exact input (msg.value) and minimum output.
@@ -415,47 +506,11 @@ def tokenToExchangeTransferOutput(tokens_bought: uint256, max_tokens_sold: uint2
     assert recipient != self
     return self.tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, msg.sender, recipient, exchange_addr)
 
-# @notice Public price function for ETH to Token trades with an exact input.
-# @param eth_sold Amount of ETH sold.
-# @return Amount of Tokens that can be bought with input ETH.
-@public
-@constant
-def getEthToTokenInputPrice(eth_sold: uint256(wei)) -> uint256:
-    assert eth_sold > 0
-    token_reserve: uint256 = self.token.balanceOf(self)
-    return self.getInputPrice(as_unitless_number(eth_sold), as_unitless_number(self.balance), token_reserve)
 
-# @notice Public price function for ETH to Token trades with an exact output.
-# @param tokens_bought Amount of Tokens bought.
-# @return Amount of ETH needed to buy output Tokens.
-@public
-@constant
-def getEthToTokenOutputPrice(tokens_bought: uint256) -> uint256(wei):
-    assert tokens_bought > 0
-    token_reserve: uint256 = self.token.balanceOf(self)
-    eth_sold: uint256 = self.getOutputPrice(tokens_bought, as_unitless_number(self.balance), token_reserve)
-    return as_wei_value(eth_sold, 'wei')
+## -----------------------------
+## GETTERS
+## -----------------------------
 
-# @notice Public price function for Token to ETH trades with an exact input.
-# @param tokens_sold Amount of Tokens sold.
-# @return Amount of ETH that can be bought with input Tokens.
-@public
-@constant
-def getTokenToEthInputPrice(tokens_sold: uint256) -> uint256(wei):
-    assert tokens_sold > 0
-    token_reserve: uint256 = self.token.balanceOf(self)
-    eth_bought: uint256 = self.getInputPrice(tokens_sold, token_reserve, as_unitless_number(self.balance))
-    return as_wei_value(eth_bought, 'wei')
-
-# @notice Public price function for Token to ETH trades with an exact output.
-# @param eth_bought Amount of output ETH.
-# @return Amount of Tokens needed to buy output ETH.
-@public
-@constant
-def getTokenToEthOutputPrice(eth_bought: uint256(wei)) -> uint256:
-    assert eth_bought > 0
-    token_reserve: uint256 = self.token.balanceOf(self)
-    return self.getOutputPrice(as_unitless_number(eth_bought), token_reserve, as_unitless_number(self.balance))
 
 # @return Address of Token that is sold on this exchange.
 @public
@@ -469,7 +524,13 @@ def tokenAddress() -> address:
 def factoryAddress() -> address(Factory):
     return self.factory
 
-# ERC20 compatibility for exchange liquidity modified from
+
+
+## -----------------------------
+## ERC20 compatible functions
+## -----------------------------
+
+
 # https://github.com/ethereum/vyper/blob/master/examples/tokens/ERC20.vy
 @public
 @constant

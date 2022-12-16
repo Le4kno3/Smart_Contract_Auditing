@@ -4,11 +4,12 @@ const factoryJson = require("../../build-uniswap-v1/UniswapV1Factory.json");
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 
+//this is there to verify the working of exchange
 // Calculates how much ETH (in wei) Uniswap will pay for the given amount of tokens
 function calculateTokenToEthInputPrice(tokensSold, tokensInReserve, etherInReserve) {
     return tokensSold.mul(ethers.BigNumber.from('997')).mul(etherInReserve).div(
         (tokensInReserve.mul(ethers.BigNumber.from('1000')).add(tokensSold.mul(ethers.BigNumber.from('997'))))
-    )
+    );
 }
 
 describe('[Challenge] Puppet', function () {
@@ -20,18 +21,20 @@ describe('[Challenge] Puppet', function () {
 
     const ATTACKER_INITIAL_TOKEN_BALANCE = ethers.utils.parseEther('1000');
     const ATTACKER_INITIAL_ETH_BALANCE = ethers.utils.parseEther('25');
-    const POOL_INITIAL_TOKEN_BALANCE = ethers.utils.parseEther('100000')
+    const POOL_INITIAL_TOKEN_BALANCE = ethers.utils.parseEther('100000');
 
     before(async function () {
-        /** SETUP SCENARIO - NO NEED TO CHANGE ANYTHING HERE */  
+        /** SETUP SCENARIO - NO NEED TO CHANGE ANYTHING HERE */
         [deployer, attacker] = await ethers.getSigners();
 
+        //create the instances
         const UniswapExchangeFactory = new ethers.ContractFactory(exchangeJson.abi, exchangeJson.evm.bytecode, deployer);
         const UniswapFactoryFactory = new ethers.ContractFactory(factoryJson.abi, factoryJson.evm.bytecode, deployer);
 
         const DamnValuableTokenFactory = await ethers.getContractFactory('DamnValuableToken', deployer);
         const PuppetPoolFactory = await ethers.getContractFactory('PuppetPool', deployer);
 
+        //initialize attacker balance
         await ethers.provider.send("hardhat_setBalance", [
             attacker.address,
             "0x15af1d78b58c40000", // 25 ETH
@@ -39,6 +42,7 @@ describe('[Challenge] Puppet', function () {
         expect(
             await ethers.provider.getBalance(attacker.address)
         ).to.equal(ATTACKER_INITIAL_ETH_BALANCE);
+
 
         // Deploy token to be traded in Uniswap
         this.token = await DamnValuableTokenFactory.deploy();
@@ -60,7 +64,7 @@ describe('[Challenge] Puppet', function () {
             this.token.address,
             this.uniswapExchange.address
         );
-    
+
         // Add initial token and ETH liquidity to the pool
         await this.token.approve(
             this.uniswapExchange.address,
@@ -72,7 +76,7 @@ describe('[Challenge] Puppet', function () {
             (await ethers.provider.getBlock('latest')).timestamp * 2,   // deadline
             { value: UNISWAP_INITIAL_ETH_RESERVE, gasLimit: 1e6 }
         );
-        
+
         // Ensure Uniswap exchange is working as expected
         expect(
             await this.uniswapExchange.getTokenToEthInputPrice(
@@ -86,7 +90,7 @@ describe('[Challenge] Puppet', function () {
                 UNISWAP_INITIAL_ETH_RESERVE
             )
         );
-        
+
         // Setup initial token balances of pool and attacker account
         await this.token.transfer(attacker.address, ATTACKER_INITIAL_TOKEN_BALANCE);
         await this.token.transfer(this.lendingPool.address, POOL_INITIAL_TOKEN_BALANCE);
@@ -103,12 +107,18 @@ describe('[Challenge] Puppet', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+
+        //exchange all 1000 tokens for ETH
+        this.;
+
+        //then buy lots of tokens for all ETH
+
     });
 
     after(async function () {
         /** SUCCESS CONDITIONS */
 
-        // Attacker has taken all tokens from the pool        
+        // Attacker has taken all tokens from the pool
         expect(
             await this.token.balanceOf(this.lendingPool.address)
         ).to.be.eq('0');
