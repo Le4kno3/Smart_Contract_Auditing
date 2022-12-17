@@ -52,11 +52,13 @@ contract PuppetPool is ReentrancyGuard {
     function calculateDepositRequired(
         uint256 amount
     ) public view returns (uint256) {
+        //as in earlier step we multiplied the result with 10**18, here we divide it.
         return (amount * _computeOraclePrice() * 2) / 10 ** 18;
     }
 
     function _computeOraclePrice() private view returns (uint256) {
         // calculates the price of the token in wei according to Uniswap pair
+        //to make the numerator not less than denominator, there the function multiplies the numberator with 10**18.
         return
             (uniswapPair.balance * (10 ** 18)) / token.balanceOf(uniswapPair);
         // ETH_balance(exchange) * 10 ** 18

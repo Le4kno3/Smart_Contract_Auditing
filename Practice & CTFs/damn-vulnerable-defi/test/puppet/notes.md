@@ -22,10 +22,23 @@ Analysis
 Attack Approach:
     - We can directly add or remove liquidity from exchange contract, but the exchange has a limited funds.
     - Our first goal is to make the OMG token price as less as possible.
-    - Then the pool contract will use this manipulated exchange rates.
-    - The buy as much DVT tokens as possible.
+        1. Sell all attacker owned DVT tokens.
+            - we just need to transfer the tokens to the exchange.address
+            - why cant is send using this.token.transfer(this.exchange.address) yes this works
+            - this will reduce the price of OMG token.
+    - How many ETH I will get in return?
+        2. 1980.19801980198 ETH, but the problem is this is not enough because we need 2x of ETH.
+            - I think we need to repeat this attack in an intelligent way, rather than investing all attacker tokens ETH at once we should be doing this in steps gradually.
+            - If we have transferred the tokens, can we remove the token liquidity?
+    3. The buy as much DVT tokens as possible.
         - you have to pay the 2x collateral.
-    - sell a lot of tokens to uniswap exchange directly
-        - this will reduce the price of OMG token.
-    - Then buy lots of OMG tokens from pool
     - summary: Inject lots of tokens to exchange, reduce the price of token, then buy the tokens from pool. Due to this manipulated price, we can drain the pool, slowly if not all at once.
+
+Attack Approach 2:
+     - The above method does de-value the DVT tokens.
+     - But the problem is that it now requires around 1989 ETH (earlier it was 100000 ETH) to buy 100000 DVT.
+     - Now the only possible solution is to somehow reduce the exchange ETH balance.
+        - We need to swap Tokens with ETH, instead of simply sending the tokens to the exchange.
+        - This will reduce the ETH amount of reserve for that exchange. And we are already sending a lots of tokens.
+    - new ETH_reserve(exchange) = previous_reserve(exchange) - swapping_cost(tx)
+    - Now when the next exchange rates are calculated it will be new ETH_reserve(exhcnage) / TOKEN_reserve(exchange)
