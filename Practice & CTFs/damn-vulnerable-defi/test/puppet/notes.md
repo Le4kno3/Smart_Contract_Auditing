@@ -42,3 +42,5 @@ Attack Approach 2:
         - This will reduce the ETH amount of reserve for that exchange. And we are already sending a lots of tokens.
     - new ETH_reserve(exchange) = previous_reserve(exchange) - swapping_cost(tx)
     - Now when the next exchange rates are calculated it will be new ETH_reserve(exhcnage) / TOKEN_reserve(exchange)
+
+Root Cause of Attack: The attack has 100x more tokens than the exchange.
