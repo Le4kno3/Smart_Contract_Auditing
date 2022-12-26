@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@gnosis.pm/safe-contracts/contracts/GnosisSafe.sol";
-import "@gnosis.pm/safe-contracts/contracts/proxies/IProxyCreationCallback.sol";
+import "@gnosis.pm/safe-contracts/contracts/proxies/IProxyCreationCallback.sol"; //includes a proxyCreated() interface.
 
 /**
  * @title WalletRegistry
@@ -14,23 +14,22 @@ import "@gnosis.pm/safe-contracts/contracts/proxies/IProxyCreationCallback.sol";
  * @author Damn Vulnerable DeFi (https://damnvulnerabledefi.xyz)
  */
 contract WalletRegistry is IProxyCreationCallback, Ownable {
-    
     uint256 private constant MAX_OWNERS = 1;
     uint256 private constant MAX_THRESHOLD = 1;
-    uint256 private constant TOKEN_PAYMENT = 10 ether; // 10 * 10 ** 18
-    
-    address public immutable masterCopy;
-    address public immutable walletFactory;
-    IERC20 public immutable token;
+    uint256 private constant TOKEN_PAYMENT = 10 ether; // 10 * 10 ** 18, huge payment for wallet creation.
 
-    mapping (address => bool) public beneficiaries;
+    address public immutable masterCopy; //
+    address public immutable walletFactory; //
+    IERC20 public immutable token; //
+
+    mapping(address => bool) public beneficiaries;
 
     // owner => wallet
-    mapping (address => address) public wallets;
+    mapping(address => address) public wallets;
 
     constructor(
         address masterCopyAddress,
-        address walletFactoryAddress, 
+        address walletFactoryAddress,
         address tokenAddress,
         address[] memory initialBeneficiaries
     ) {
@@ -39,24 +38,28 @@ contract WalletRegistry is IProxyCreationCallback, Ownable {
 
         masterCopy = masterCopyAddress;
         walletFactory = walletFactoryAddress;
-        token = IERC20(tokenAddress);
+        token = IERC20(tokenAddress); //token is a contract.
 
         for (uint256 i = 0; i < initialBeneficiaries.length; i++) {
             addBeneficiary(initialBeneficiaries[i]);
         }
     }
 
+    //add beneficiary for the DVT tokens.
     function addBeneficiary(address beneficiary) public onlyOwner {
         beneficiaries[beneficiary] = true;
     }
 
+    //remove beneficiary for the DVT tokens.
     function _removeBeneficiary(address beneficiary) private {
         beneficiaries[beneficiary] = false;
     }
 
     /**
-     @notice Function executed when user creates a Gnosis Safe wallet via GnosisSafeProxyFactory::createProxyWithCallback
+     @notice Function executed when, user creates a Gnosis Safe wallet, via GnosisSafeProxyFactory::createProxyWithCallback
              setting the registry's address as the callback.
+             Like a post creation function, after a gnosis wallet is created.
+             New gnosis safe wallets are created as a proxy contract.
      */
     function proxyCreated(
         GnosisSafeProxy proxy,
@@ -65,25 +68,40 @@ contract WalletRegistry is IProxyCreationCallback, Ownable {
         uint256
     ) external override {
         // Make sure we have enough DVT to pay
-        require(token.balanceOf(address(this)) >= TOKEN_PAYMENT, "Not enough funds to pay");
+        require(
+            token.balanceOf(address(this)) >= TOKEN_PAYMENT,
+            "Not enough funds to pay"
+        );
 
         address payable walletAddress = payable(proxy);
 
         // Ensure correct factory and master copy
         require(msg.sender == walletFactory, "Caller must be factory");
         require(singleton == masterCopy, "Fake mastercopy used");
-        
+
         // Ensure initial calldata was a call to `GnosisSafe::setup`
-        require(bytes4(initializer[:4]) == GnosisSafe.setup.selector, "Wrong initialization");
+        require(
+            bytes4(initializer[:4]) == GnosisSafe.setup.selector,
+            "Wrong initialization"
+        );
 
         // Ensure wallet initialization is the expected
-        require(GnosisSafe(walletAddress).getThreshold() == MAX_THRESHOLD, "Invalid threshold");
-        require(GnosisSafe(walletAddress).getOwners().length == MAX_OWNERS, "Invalid number of owners");       
+        require(
+            GnosisSafe(walletAddress).getThreshold() == MAX_THRESHOLD,
+            "Invalid threshold"
+        );
+        require(
+            GnosisSafe(walletAddress).getOwners().length == MAX_OWNERS,
+            "Invalid number of owners"
+        );
 
         // Ensure the owner is a registered beneficiary
         address walletOwner = GnosisSafe(walletAddress).getOwners()[0];
 
-        require(beneficiaries[walletOwner], "Owner is not registered as beneficiary");
+        require(
+            beneficiaries[walletOwner],
+            "Owner is not registered as beneficiary"
+        );
 
         // Remove owner as beneficiary
         _removeBeneficiary(walletOwner);
@@ -92,6 +110,6 @@ contract WalletRegistry is IProxyCreationCallback, Ownable {
         wallets[walletOwner] = walletAddress;
 
         // Pay tokens to the newly created wallet
-        token.transfer(walletAddress, TOKEN_PAYMENT);        
+        token.transfer(walletAddress, TOKEN_PAYMENT);
     }
 }
