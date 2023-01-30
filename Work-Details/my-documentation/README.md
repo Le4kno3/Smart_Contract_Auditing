@@ -1,0 +1,1 @@
+I have not written much technical documentations, but while reviewing any contract I do like to document whatever I understood like the given screenshot.
